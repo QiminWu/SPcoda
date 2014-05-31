@@ -1,3 +1,8 @@
+## This is an Script to plot an spectrogram of seismic data
+## Using python and Obspy
+### Esteban J. Chaves - UC Santa Cruz - 2014
+
+
 import matplotlib.pyplot as plt
 from obspy.core import read
 from obspy.imaging.spectrogram import spectrogram
