@@ -9,7 +9,7 @@ from obspy.imaging.spectrogram import spectrogram
 import numpy as np
 
 
-st = read('indi_saju.bhz.sac')
+st = read('indi_saju.bhz.sac') # Reading the waveform in SAC format
 print(st)
 
 fig = plt.figure()
