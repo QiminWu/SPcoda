@@ -1,5 +1,11 @@
 # SPcoda
 
+
+![alt tag](https://github.com/echavess/SPcoda/blob/master/PNCB.Average_Envelope.png)
+
+
+
+
 Earthquake Source Parameters from Coda waves (In progress!!)
 
 This program generates coda envelopes for one event using multiple stations and computes 
