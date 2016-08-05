@@ -1,0 +1,216 @@
+#!/Users/ech/anaconda/bin/python
+
+'''
+SPcoda: "Source Parameters from Coda waves"
+
+This program generates coda envelopes for one event using multiple stations, following:
+Mayeda et al., 2003: "Stable and Transportable Regional Magnitudes Based on 
+Coda-Derived Moment-Rate Spectra" 
+
+Input: - Seismic data: any format. Data structure: EVENTS/2013020/STNM/DATA (Horizontal components)
+       - Instrument response files. Format: RESP
+ 
+Output: - text files containing the envelope for each component. 
+
+Author: Esteban J. Chaves - UC Santa Cruz - 2016
+'''
+
+
+import os, sys, glob, math
+import time as tt
+from shutil import move
+import matplotlib.pyplot as plt
+import numpy as np
+from obspy.core import read, UTCDateTime, Stream
+from obspy.signal.invsim import simulate_seismometer
+import obspy.signal.filter as flt
+import obspy.signal.util as utl
+import warnings
+plt.style.use('ggplot')
+#plt.style.use('seaborn-dark')
+
+
+
+class SPcoda(object):
+	
+	def __init__(self, event, lc, hc, corners):
+	
+		self.event = event
+		self.lc = lc
+		self.hc = hc
+		self.corners = corners 
+		
+	def Compute_envelope(self):
+		
+		# Initial time
+		tic = tt.clock()
+		
+		stations = next(os.walk(self.event))[1]
+		
+		for station in stations: 
+			sta_dir = os.path.join(self.event, station)
+			filenames = next(os.walk(sta_dir))[2]
+
+			for filename in filenames:
+				if not filename.startswith('RESP.') and os.path.isfile(os.path.join(sta_dir, filename)):
+					if not filename.startswith('env.') and os.path.isfile(os.path.join(sta_dir, filename)):
+						if not filename.endswith('.dataless') and os.path.isfile(os.path.join(sta_dir, filename)):
+							
+							data = os.path.join(sta_dir, filename)
+
+                            # Reading horizontal componentes
+							st = read(data)
+							st_copy = st.copy()
+							tr = st[0]
+							tr_or = tr.copy()
+							
+							# Metadata from trace
+  							time = tr.times()
+							date = tr.stats.starttime
+							trace = tr.id
+							print "\nReading trace for: " + str(trace)
+							df = tr.stats.sampling_rate
+							sta = trace.split('.', 2 )
+							stnm = sta[1]
+							net = sta[0]
+							chan = sta[2]
+							respname = ('RESP'+'.'+net+'.'+stnm+'.'+chan)
+							repfile = os.path.join(sta_dir, respname)
+							print "Response file: "+respname
+                    
+                        	# Removing trend and mean
+							tr.detrend('simple')
+                    
+                        	# Defining pre-filter (based on Instrumentation)
+							pre_filt= (0.0125, 0.0100, 20.0, 25.0)
+							
+							# Deconvolving to velocity
+							seedresp = {'filename':repfile,'date':date,'units':'VEL'}
+							tr.simulate(paz_remove=None, remove_sensitivity=True, pre_filt=pre_filt, seedresp=seedresp)
+                    
+							# Plotting both raw data and deconvolved to vel
+							fig1 = plt.figure()
+							ax1 = plt.subplot(211)
+							ax1.plot(time,tr_or,'k')
+							ax1.set_ylabel('STS-2 [counts]')
+							plt.xlim(0, 200)
+							plt.title(trace)
+
+							ax2 = plt.subplot(212)
+							ax2.plot(time,tr,'r')
+							ax2.set_ylabel('Velocity [m/s]')
+							ax2.set_xlabel('Time [s]')
+							plt.xlim(0, 200)
+							Figname1 = stnm+'.'+chan+'.Deconvolved.eps'
+							#fig1.savefig(Figname1, format='eps', dpi=1000)
+                        
+                        	# Creating a Numpy-array from tr
+							NParray = tr.data
+							
+							# Applying a bandpass filer to the NParray
+							NParray_filt = flt.bandpass(NParray, self.lc, self.hc, df, corners=self.corners, zerophase=True)
+							
+							# Creating the envelope
+   							Envelope = flt.envelope(NParray_filt)
+                    
+                        	# Taking the log10 of the envelope
+							Envelope = np.log10(Envelope)
+							
+							# Plotting filtered data and envelope
+							fig2 = plt.figure()
+							ax3 = plt.subplot(211)
+							ax3.plot(time, NParray_filt, 'k')
+							ax3.set_ylabel('Velocity [m/s]')
+							ax3.set_xlabel('Time [s]')
+							plt.xlim(0, 200)
+							plt.title(trace + ' BP: '+ str(self.lc)+ ' - ' + str(self.hc) + ' Hz') 
+							
+							ax4 = plt.subplot(212)
+  							ax4.plot(time, Envelope, color='gray')
+							ax4.set_ylabel('Amplitude [$log_{10}$]')
+							ax4.set_xlabel('Time [s]')
+							plt.xlim(0, 200)
+                        
+                        	# Saving figures
+							Figname2 = stnm+'.'+chan+'.Envelope.eps'
+							#fig2.savefig(Figname2, format='eps', dpi=1000)
+                        
+                        
+                        	# Closing figures
+							plt.close('all')
+                        
+                        	# Creating txt files with envelopes
+							EnvName = 'env'+"."+stnm+"."+ chan
+							FileName = os.path.join(sta_dir, EnvName)
+                    
+							time_env = np.column_stack((time, Envelope))
+							np.savetxt(FileName, time_env, fmt='%5.10f')
+							
+		toc = tt.clock()
+		print "\n Creating envelopes took: " + str(toc-tic) + ' seconds\n'
+
+			
+	def average_envelope(self):
+	
+		stations = next(os.walk(self.event))[1]
+		
+		for station in stations:
+			sta_dir = os.path.join(self.event, station)
+			env_dir = os.path.join(self.event, station, 'env*')
+			envelope_list = glob.glob(env_dir)
+			
+			east = open(envelope_list[0],'r')
+			north = open(envelope_list[1],'r')
+			
+			time, env_east = np.loadtxt(east, dtype='float', unpack=True, usecols=(0,1))
+			env_north = np.loadtxt(north, dtype='float', unpack=True, usecols=(1,)) 
+			
+			# Averaging the envelopes
+			print "Averaging envelope for: " + station
+			
+			env_average = (env_east + env_north)/2
+			
+			fig3 = plt.figure()
+			plt.plot(time,env_average, 'gray' )
+			plt.ylabel('Amplitude [$log_{10}$]')
+			plt.xlabel('Time [s]')
+			plt.xlim(-1, 300)
+			plt.title(station+ ': event '+str(self.event))
+			plt.legend(['BP: '+ str(self.lc)+ ' - ' + str(self.hc) + ' Hz'])
+			
+			
+			# Saving figures
+			Figname3 = station+'.Average_Envelope.eps'
+			fig3.savefig(Figname3, format='eps', dpi=1000)
+			
+			# Saving txt files with envelope data
+			EnvName = 'env.average'+ station
+			save_it_to = os.path.join(sta_dir, EnvName)
+            
+            # Saving envelopes to directories
+			time_env = np.column_stack((time, env_average))
+			np.savetxt(save_it_to, time_env, fmt='%5.10f')
+			
+		
+	def save_figures(self, directory):
+	
+		self.directory = directory
+					
+		if not os.path.exists(self.directory):
+			os.makedirs(self.directory)
+		figs = glob.glob('*.eps')
+		
+		for f in figs:
+			dst_file = os.path.join(self.directory, f)
+			if os.path.exists(dst_file):
+				os.remove(dst_file)
+			move(f, self.directory)
+			
+
+		
+Coda_envelope = SPcoda('2013020', 0.3, 0.5, 4)
+Coda_envelope.Compute_envelope()
+Coda_envelope.average_envelope()
+Coda_envelope.save_figures('Figures_test')
+	
+	
