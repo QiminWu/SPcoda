@@ -14,5 +14,6 @@ scaling in apparent stress with seismic moment"
 Input: 
 - Seismic data: any format. Directory structure: EVENT/STNM/DATA (Horizontal components)
 - Instrument response files. Format: RESP
+
 Output(so far):
 - Text files containing the average log10 envelope computed from the horizontal components. 
