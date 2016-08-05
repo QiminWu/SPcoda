@@ -16,4 +16,4 @@ Input:
 - Instrument response files. Format: RESP
 
 Output(so far):
-- Text files containing the average log10 envelope computed from the horizontal components. 
+- Averaged log10 envelopes computed from horizontal components (BHN; HHN and BHE; HHN) 
