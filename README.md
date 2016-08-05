@@ -12,7 +12,7 @@ scaling in apparent stress with seismic moment"
 
 
 Input: 
-- Seismic data: any format. Directory structure: EVENT/STNM/DATA (Horizontal components)
+- Seismic data: any format. Directory structure: EVENT/STNM/DATA
 - Instrument response files. Format: RESP
 
 Output(so far):
