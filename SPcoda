@@ -102,7 +102,7 @@ class SPcoda(object):
 							ax2.set_xlabel('Time [s]')
 							plt.xlim(0, 200)
 							Figname1 = stnm+'.'+chan+'.Deconvolved.eps'
-							#fig1.savefig(Figname1, format='eps', dpi=1000)
+							fig1.savefig(Figname1, format='eps', dpi=1000)
                         
                         	# Creating a Numpy-array from tr
 							NParray = tr.data
@@ -133,7 +133,7 @@ class SPcoda(object):
                         
                         	# Saving figures
 							Figname2 = stnm+'.'+chan+'.Envelope.eps'
-							#fig2.savefig(Figname2, format='eps', dpi=1000)
+							fig2.savefig(Figname2, format='eps', dpi=1000)
                         
                         
                         	# Closing figures
