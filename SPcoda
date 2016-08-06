@@ -3,7 +3,7 @@
 '''
 SPcoda: "Source Parameters from Coda waves"
 
-This program generates coda envelopes for one event using multiple stations, following:
+This program generates coda envelopes for events using multiple stations, following:
 Mayeda et al., 2003: "Stable and Transportable Regional Magnitudes Based on 
 Coda-Derived Moment-Rate Spectra" 
 
