@@ -1,7 +1,7 @@
 # SPcoda
 
 
-![alt tag](https://github.com/echavess/SPcoda/blob/master/PNCB.Average_Envelope.png)
+![alt tag](https://github.com/echavess/SPcoda/blob/master/Figures/PNCB.Average_Envelope.png)
 
 
 
