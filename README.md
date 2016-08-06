@@ -12,7 +12,7 @@ This program generates coda envelopes for one event using multiple stations and 
 earthquake source parameters (corner frequency, stress drop and radiated seismic energy), following:
 
 - Mayeda et al., 2003: "Stable and Transportable Regional Magnitudes Based on 
-Coda-Derived Moment-Rate Spectra" 
+Coda-Derived Moment-Rate Spectra" [pdf](http://www.bssaonline.org/content/93/1/224.full)
 - Baltay et al., 2010: "Radiated seismic energy from coda measurements and no 
 scaling in apparent stress with seismic moment"
 
